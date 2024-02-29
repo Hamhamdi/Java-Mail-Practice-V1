@@ -49,6 +49,28 @@ public class emailServiceImpl implements emailService {
     @Override
     @Async
     public void sendMimeMessageWithAttachments(String name, String to, String token) {
+        try{
+            MimeMessage message = getMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, UTF_8_ENCODING);
+            helper.setPriority(1);
+            helper.setSubject(NEW_USER_ACCOUNT_VERIFICATION);
+            helper.setFrom(fromEmail);
+            helper.setTo(to);
+            helper.setText(getEmailMessage(name,host,token));
+            // Add Attachments
+            File file = new File("/Users/hamdihamza/Desktop/BMW PICS/A.jpg");
+            FileSystemResource car = new FileSystemResource(file);
+            helper.addAttachment(car.getFilename(),car);
+            mailSender.send(message);
+        }catch(Exception e){
+            System.out.println(e.getMessage());
+            throw new RuntimeException(e.getMessage());
+        }
+    }
+
+    @Override
+    @Async
+    public void sendMimeMessageWithEmbeddedImages(String name, String to, String token) {
 
         try{
             MimeMessage message = getMimeMessage();
@@ -60,7 +82,8 @@ public class emailServiceImpl implements emailService {
             helper.setText(getEmailMessage(name,host,token));
             // Add Attachments
             File file = new File("/Users/hamdihamza/Desktop/BMW PICS/A.jpg");
-            FileSystemResource car = new FileSystemResource(file);            helper.addAttachment(car.getFilename(),car);
+            FileSystemResource car = new FileSystemResource(file);
+            helper.addInline(getContentId(car.getFilename()), car);
             mailSender.send(message);
         }catch(Exception e){
             System.out.println(e.getMessage());
@@ -69,11 +92,6 @@ public class emailServiceImpl implements emailService {
     }
 
 
-
-    @Override
-    public void sendMimeMessageWithEmbeddedImages(String name, String to, String token) {
-
-    }
 
     @Override
     public void sendMimeMessageWithEmbeddedFiles(String name, String to, String token) {
@@ -92,5 +110,8 @@ public class emailServiceImpl implements emailService {
 
     private MimeMessage getMimeMessage() {
         return mailSender.createMimeMessage();
+    }
+    private String getContentId(String  filename) {
+        return "<"+filename+">";
     }
 }
